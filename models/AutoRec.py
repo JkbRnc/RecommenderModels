@@ -14,7 +14,7 @@ class AutoRec(torch.nn.Module):
         return self.sigmoid(self.inp_layer(x))
 
     def decode(self, emb):
-        self.out_layer(emb)
+        return self.out_layer(emb)
 
     def forward(self, x):
         emb = self.encode(x)
@@ -29,6 +29,7 @@ class AutoRec(torch.nn.Module):
         max_epochs=300,
         batch_size=64,
         valid_data=None,
+        return_loss=False
     ):
         self.optim = optim
         self.criterion = criterion
@@ -49,6 +50,8 @@ class AutoRec(torch.nn.Module):
                 loss = self._valid_epoch(valid_loader)
                 valid_loss.extend(loss)
                 print("Valid loss:", sum(loss) / len(loss))
+        if return_loss:
+            return train_loss, valid_loss
 
     def _train_epoch(self, data):
         list_loss = []
