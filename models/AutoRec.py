@@ -1,6 +1,4 @@
 import torch
-from torch.utils.data import DataLoader
-
 
 class AutoRec(torch.nn.Module):
     def __init__(self, input_size, emb_size, dropout=0.1, bias=True):
@@ -20,62 +18,3 @@ class AutoRec(torch.nn.Module):
         emb = self.encode(x)
         emb = self.dropout(emb)
         return self.decode(emb)
-
-    def fit(
-        self,
-        train_data,
-        criterion,
-        optim,
-        max_epochs=300,
-        batch_size=64,
-        valid_data=None,
-        return_loss=False
-    ):
-        self.optim = optim
-        self.criterion = criterion
-        validate = False
-        if valid_data is not None:
-            validate = True
-            valid_loss = []
-            valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False)
-
-        train_loss = []
-        train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-        for epoch in range(max_epochs):
-            print("=" * 10, "Epoch:", epoch + 1, "=" * 10)
-            loss = self._train_epoch(train_loader)
-            train_loss.extend(loss)
-            print("Train loss:", sum(loss) / len(loss))
-            if validate:
-                loss = self._valid_epoch(valid_loader)
-                valid_loss.extend(loss)
-                print("Valid loss:", sum(loss) / len(loss))
-        if return_loss:
-            return train_loss, valid_loss
-
-    def _train_epoch(self, data):
-        list_loss = []
-        self.train()
-        for item in data:
-            r = item.float()
-            r_hat = self.forward(r)
-            loss = self.criterion(r, r_hat * torch.sign(r))
-
-            list_loss.append(loss.item())
-            self.optim.zero_grad()
-            loss.backward()
-            self.optim.step()
-
-        return list_loss
-
-    def _valid_epoch(self, data):
-        list_loss = []
-        self.eval()
-        with torch.no_grad():
-            for item in data:
-                r = item.float()
-                r_hat = self.forward(r)
-                loss = self.criterion(r, r_hat * torch.sign(r))
-                list_loss.append(loss.item())
-
-        return list_loss
